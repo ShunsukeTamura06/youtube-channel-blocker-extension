@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Channel Blocker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚫 YouTube Channel Blocker</h1>
+      <p class="subtitle">ブロック中のチャンネル管理</p>
+    </header>
+    
+    <main>
+      <section class="add-section">
+        <h2>チャンネルを手動で追加</h2>
+        <div class="input-group">
+          <input type="text" id="channelInput" placeholder="チャンネルURL または @ChannelName" />
+          <button id="addBtn" class="btn-primary">追加</button>
+        </div>
+        <div class="help-text">
+          例: https://www.youtube.com/@channelname または @channelname
+        </div>
+      </section>
+      
+      <section class="list-section">
+        <div class="section-header">
+          <h2>ブロック中のチャンネル</h2>
+          <span id="channelCount" class="count">0 チャンネル</span>
+        </div>
+        
+        <div id="channelList" class="channel-list">
+          <div class="empty-state">
+            <p>📝 ブロック中のチャンネルはありません</p>
+            <p class="hint">YouTube で動画の「🚫 ブロック」ボタンをクリックして追加してください</p>
+          </div>
+        </div>
+      </section>
+      
+      <section class="actions-section">
+        <button id="clearAllBtn" class="btn-secondary">すべてクリア</button>
+        <button id="exportBtn" class="btn-secondary">エクスポート</button>
+        <input type="file" id="importInput" accept=".json" style="display: none;" />
+        <button id="importBtn" class="btn-secondary">インポート</button>
+      </section>
+    </main>
+    
+    <footer>
+      <div class="status" id="status"></div>
+    </footer>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
