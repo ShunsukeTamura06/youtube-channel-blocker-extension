@@ -9,41 +9,51 @@
 <body>
   <div class="container">
     <header>
-      <h1>🚫 YouTube Channel Blocker</h1>
-      <p class="subtitle">ブロック中のチャンネル管理</p>
+      <div class="header-content">
+        <div class="title-section">
+          <h1 data-i18n="extensionTitle">🚫 YouTube Channel Blocker</h1>
+          <p class="subtitle" data-i18n="subtitle">ブロック中のチャンネル管理</p>
+        </div>
+        <div class="language-selector">
+          <select id="languageSelect" class="language-select">
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="en">🇺🇸 English</option>
+          </select>
+        </div>
+      </div>
     </header>
     
     <main>
       <section class="add-section">
-        <h2>チャンネルを手動で追加</h2>
+        <h2 data-i18n="addChannelManually">チャンネルを手動で追加</h2>
         <div class="input-group">
-          <input type="text" id="channelInput" placeholder="チャンネルURL または @ChannelName" />
-          <button id="addBtn" class="btn-primary">追加</button>
+          <input type="text" id="channelInput" data-i18n-placeholder="channelUrlPlaceholder" placeholder="チャンネルURL または @ChannelName" />
+          <button id="addBtn" class="btn-primary" data-i18n="addButton">追加</button>
         </div>
-        <div class="help-text">
+        <div class="help-text" data-i18n="helpText">
           例: https://www.youtube.com/@channelname または @channelname
         </div>
       </section>
       
       <section class="list-section">
         <div class="section-header">
-          <h2>ブロック中のチャンネル</h2>
-          <span id="channelCount" class="count">0 チャンネル</span>
+          <h2 data-i18n="blockedChannels">ブロック中のチャンネル</h2>
+          <span id="channelCount" class="count">0 <span data-i18n="channelsCount">チャンネル</span></span>
         </div>
         
         <div id="channelList" class="channel-list">
           <div class="empty-state">
-            <p>📝 ブロック中のチャンネルはありません</p>
-            <p class="hint">YouTube で動画の「🚫 ブロック」ボタンをクリックして追加してください</p>
+            <p data-i18n="emptyStateMessage">📝 ブロック中のチャンネルはありません</p>
+            <p class="hint" data-i18n="emptyStateHint">YouTube で動画の「🚫 ブロック」ボタンをクリックして追加してください</p>
           </div>
         </div>
       </section>
       
       <section class="actions-section">
-        <button id="clearAllBtn" class="btn-secondary">すべてクリア</button>
-        <button id="exportBtn" class="btn-secondary">エクスポート</button>
+        <button id="clearAllBtn" class="btn-secondary" data-i18n="clearAllButton">すべてクリア</button>
+        <button id="exportBtn" class="btn-secondary" data-i18n="exportButton">エクスポート</button>
         <input type="file" id="importInput" accept=".json" style="display: none;" />
-        <button id="importBtn" class="btn-secondary">インポート</button>
+        <button id="importBtn" class="btn-secondary" data-i18n="importButton">インポート</button>
       </section>
     </main>
     
@@ -52,6 +62,7 @@
     </footer>
   </div>
   
+  <script src="i18n.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
