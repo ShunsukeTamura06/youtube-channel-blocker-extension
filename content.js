@@ -166,56 +166,104 @@ function showMessage(text) {
   }, 3000);
 }
 
-// ページの変更を監視
-const observer = new MutationObserver((mutations) => {
-  let shouldCheck = false;
-  
-  mutations.forEach((mutation) => {
-    if (mutation.addedNodes.length > 0) {
-      shouldCheck = true;
+// DOM が準備できるまで待機する関数
+function waitForBody() {
+  return new Promise((resolve) => {
+    if (document.body) {
+      resolve();
+    } else {
+      const observer = new MutationObserver((mutations, obs) => {
+        if (document.body) {
+          obs.disconnect();
+          resolve();
+        }
+      });
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
     }
   });
-  
-  if (shouldCheck) {
-    // 少し遅延を入れて実行
-    setTimeout(hideBlockedVideos, 100);
-  }
-});
+}
 
-// 監視開始
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
+// MutationObserver を安全に開始する
+async function startObserver() {
+  // body が存在するまで待機
+  await waitForBody();
+  
+  // ページの変更を監視
+  const observer = new MutationObserver((mutations) => {
+    let shouldCheck = false;
+    
+    mutations.forEach((mutation) => {
+      if (mutation.addedNodes.length > 0) {
+        shouldCheck = true;
+      }
+    });
+    
+    if (shouldCheck) {
+      // 少し遅延を入れて実行
+      setTimeout(hideBlockedVideos, 100);
+    }
+  });
+
+  // 監視開始
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  console.log('MutationObserver started successfully');
+}
 
 // URL変更の監視（SPAのため）
 let currentUrl = location.href;
-new MutationObserver(() => {
-  if (location.href !== currentUrl) {
-    currentUrl = location.href;
-    console.log('URL changed:', currentUrl);
-    
-    // 少し遅延を入れて動画をチェック
-    setTimeout(() => {
-      hideBlockedVideos();
-    }, 1000);
-  }
-}).observe(document, { subtree: true, childList: true });
+function watchUrlChanges() {
+  const urlObserver = new MutationObserver(() => {
+    if (location.href !== currentUrl) {
+      currentUrl = location.href;
+      console.log('URL changed:', currentUrl);
+      
+      // 少し遅延を入れて動画をチェック
+      setTimeout(() => {
+        hideBlockedVideos();
+      }, 1000);
+    }
+  });
+  
+  urlObserver.observe(document, { subtree: true, childList: true });
+}
 
 // 初期化
 (async function init() {
-  await loadBlockedChannels();
+  console.log('Initializing YouTube Channel Blocker...');
   
-  // ページ読み込み完了時とDOMContentLoaded時に実行
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', hideBlockedVideos);
-  } else {
-    hideBlockedVideos();
+  try {
+    // ブロックリストを読み込み
+    await loadBlockedChannels();
+    
+    // MutationObserver を安全に開始
+    await startObserver();
+    
+    // URL変更の監視を開始
+    watchUrlChanges();
+    
+    // ページ読み込み完了時とDOMContentLoaded時に実行
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', hideBlockedVideos);
+    } else {
+      hideBlockedVideos();
+    }
+    
+    // 追加の遅延実行（YouTube の動的ロードに対応）
+    setTimeout(hideBlockedVideos, 2000);
+    setTimeout(hideBlockedVideos, 5000);
+    
+    console.log('YouTube Channel Blocker initialized successfully');
+    
+  } catch (error) {
+    console.error('Error initializing YouTube Channel Blocker:', error);
   }
-  
-  // 追加の遅延実行（YouTube の動的ロードに対応）
-  setTimeout(hideBlockedVideos, 2000);
-  setTimeout(hideBlockedVideos, 5000);
 })();
 
 // ストレージの変更を監視
