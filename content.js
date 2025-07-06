@@ -2,12 +2,14 @@ console.log('YouTube Channel Blocker: Content script loaded');
 
 // ブロック済みチャンネルのリストを管理
 let blockedChannels = new Set();
+let channelNames = {}; // チャンネル名のマッピング
 
 // ストレージからブロックリストを読み込み
 async function loadBlockedChannels() {
   try {
-    const result = await chrome.storage.sync.get(['blockedChannels']);
+    const result = await chrome.storage.sync.get(['blockedChannels', 'channelNames']);
     blockedChannels = new Set(result.blockedChannels || []);
+    channelNames = result.channelNames || {};
     console.log('Loaded blocked channels:', Array.from(blockedChannels));
   } catch (error) {
     console.error('Error loading blocked channels:', error);
@@ -17,9 +19,16 @@ async function loadBlockedChannels() {
 // チャンネルをブロックリストに追加
 async function addToBlockedChannels(channelId, channelName) {
   blockedChannels.add(channelId);
+  
+  // チャンネル名を適切にエンコードして保存
+  if (channelName) {
+    channelNames[channelId] = channelName;
+  }
+  
   try {
     await chrome.storage.sync.set({
-      blockedChannels: Array.from(blockedChannels)
+      blockedChannels: Array.from(blockedChannels),
+      channelNames: channelNames
     });
     console.log(`Channel blocked: ${channelName} (${channelId})`);
     
@@ -64,6 +73,25 @@ function extractChannelId(url) {
   return null;
 }
 
+// チャンネル名を安全に取得
+function getChannelName(linkElement) {
+  if (!linkElement) return '';
+  
+  // テキストコンテンツを取得し、前後の空白を削除
+  let name = linkElement.textContent || linkElement.innerText || '';
+  name = name.trim();
+  
+  // 空の場合は代替手段を試す
+  if (!name) {
+    const titleAttr = linkElement.getAttribute('title');
+    if (titleAttr) {
+      name = titleAttr.trim();
+    }
+  }
+  
+  return name;
+}
+
 // ブロックされた動画を非表示にする
 function hideBlockedVideos() {
   // 様々な動画コンテナを対象に
@@ -94,7 +122,7 @@ function hideBlockedVideos() {
         const id = extractChannelId(link.href);
         if (id) {
           channelId = id;
-          channelName = link.textContent.trim();
+          channelName = getChannelName(link);
           break;
         }
       }
@@ -130,9 +158,8 @@ function addBlockButton(videoElement, channelId, channelName) {
     e.preventDefault();
     e.stopPropagation();
     
-    if (confirm(`チャンネル "${channelName}" をブロックしますか？\n\nこのチャンネルのすべての動画が非表示になります。`)) {
-      addToBlockedChannels(channelId, channelName);
-    }
+    // 確認ダイアログを削除し、直接ブロック実行
+    addToBlockedChannels(channelId, channelName);
   });
   
   // ボタンを適切な場所に配置
@@ -272,5 +299,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     blockedChannels = new Set(changes.blockedChannels.newValue || []);
     console.log('Blocked channels updated:', Array.from(blockedChannels));
     hideBlockedVideos();
+  }
+  if (namespace === 'sync' && changes.channelNames) {
+    channelNames = changes.channelNames.newValue || {};
+    console.log('Channel names updated:', channelNames);
   }
 });
