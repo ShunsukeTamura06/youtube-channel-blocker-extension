@@ -4,7 +4,7 @@
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 12px !important;
-  padding: 2px 6px !important;
+  padding: 2px 8px !important;
   font-size: 9px !important;
   cursor: pointer !important;
   margin: 2px !important;
@@ -13,8 +13,10 @@
   position: relative !important;
   backdrop-filter: blur(4px) !important;
   line-height: 1.2 !important;
-  min-width: auto !important;
+  min-width: 35px !important;
+  max-width: 50px !important;
   white-space: nowrap !important;
+  font-weight: 500 !important;
 }
 
 .channel-block-btn:hover {
@@ -33,8 +35,8 @@
   background: rgba(0, 0, 0, 0.75) !important;
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 10px !important;
-  padding: 1px 4px !important;
+  border-radius: 8px !important;
+  padding: 1px 6px !important;
   font-size: 8px !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
@@ -44,9 +46,11 @@
   left: 4px !important;
   backdrop-filter: blur(3px) !important;
   line-height: 1.1 !important;
-  min-width: auto !important;
+  min-width: 30px !important;
+  max-width: 42px !important;
   white-space: nowrap !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  font-weight: 500 !important;
 }
 
 .channel-block-btn-compact:hover {
@@ -66,8 +70,8 @@
   background: rgba(0, 0, 0, 0.75) !important;
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-radius: 10px !important;
-  padding: 1px 4px !important;
+  border-radius: 8px !important;
+  padding: 1px 6px !important;
   font-size: 8px !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
@@ -77,9 +81,11 @@
   left: 4px !important;
   backdrop-filter: blur(3px) !important;
   line-height: 1.1 !important;
-  min-width: auto !important;
+  min-width: 30px !important;
+  max-width: 42px !important;
   white-space: nowrap !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  font-weight: 500 !important;
 }
 
 .channel-block-btn-lockup:hover {
@@ -92,6 +98,94 @@
 .channel-block-btn-lockup:active {
   background: rgba(170, 34, 34, 0.85) !important;
   transform: scale(0.9) !important;
+}
+
+/* ライトモード対応 */
+@media (prefers-color-scheme: light) {
+  .channel-block-btn {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #333 !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .channel-block-btn:hover {
+    background: rgba(220, 53, 69, 0.9) !important;
+    color: white !important;
+    border-color: rgba(220, 53, 69, 0.5) !important;
+  }
+
+  .channel-block-btn-compact,
+  .channel-block-btn-lockup {
+    background: rgba(255, 255, 255, 0.85) !important;
+    color: #333 !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .channel-block-btn-compact:hover,
+  .channel-block-btn-lockup:hover {
+    background: rgba(220, 53, 69, 0.9) !important;
+    color: white !important;
+    border-color: rgba(220, 53, 69, 0.4) !important;
+  }
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .channel-block-btn {
+    background: rgba(0, 0, 0, 0.85) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  }
+
+  .channel-block-btn-compact,
+  .channel-block-btn-lockup {
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+}
+
+/* YouTubeのテーマに応じた動的調整 */
+html[dark] .channel-block-btn,
+html[system-theme][dark] .channel-block-btn,
+[dark] .channel-block-btn {
+  background: rgba(0, 0, 0, 0.85) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+html[dark] .channel-block-btn-compact,
+html[dark] .channel-block-btn-lockup,
+html[system-theme][dark] .channel-block-btn-compact,
+html[system-theme][dark] .channel-block-btn-lockup,
+[dark] .channel-block-btn-compact,
+[dark] .channel-block-btn-lockup {
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+html:not([dark]) .channel-block-btn,
+html[system-theme]:not([dark]) .channel-block-btn,
+:not([dark]) .channel-block-btn {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #333 !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+html:not([dark]) .channel-block-btn-compact,
+html:not([dark]) .channel-block-btn-lockup,
+html[system-theme]:not([dark]) .channel-block-btn-compact,
+html[system-theme]:not([dark]) .channel-block-btn-lockup,
+:not([dark]) .channel-block-btn-compact,
+:not([dark]) .channel-block-btn-lockup {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #333 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* メッセージのスタイル */
