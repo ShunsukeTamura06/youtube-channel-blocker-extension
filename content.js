@@ -129,48 +129,74 @@ function getChannelName(linkElement) {
   return name;
 }
 
-// yt-lockup-view-model からチャンネル名を抽出
+// yt-lockup-view-model からチャンネル名を抽出（改良版）
 function extractChannelFromLockup(lockupElement) {
-  // メタデータ要素からチャンネル名を抽出
-  const metadataElements = lockupElement.querySelectorAll('yt-lockup-metadata-view-model, [class*="metadata"]');
+  console.log('[DEBUG] Processing lockup element:', lockupElement);
   
-  for (const metadata of metadataElements) {
-    const fullText = metadata.textContent?.trim();
-    if (!fullText) continue;
+  // より広範囲でテキスト要素を探す
+  const allTextElements = lockupElement.querySelectorAll('*');
+  let metadataText = '';
+  
+  // すべてのテキストコンテンツを結合
+  allTextElements.forEach(el => {
+    const text = el.textContent?.trim();
+    if (text && text.length > 10 && text.includes('回視聴')) {
+      metadataText = text;
+    }
+  });
+  
+  console.log('[DEBUG] Found metadata text:', metadataText);
+  
+  if (!metadataText) {
+    // フォールバック: lockup全体のテキストを使用
+    metadataText = lockupElement.textContent?.trim() || '';
+    console.log('[DEBUG] Fallback metadata text:', metadataText);
+  }
+  
+  if (metadataText) {
+    // 複数のパターンを試行
+    const patterns = [
+      // パターン1: 「チャンネル名」数字「回視聴」
+      /([^\d\[\]【】\n]+?)(\d+(?:[,.]\d+)*(?:[万千億])?)\s*回視聴/,
+      // パターン2: より緩い「チャンネル名」数字「万」「回視聴」
+      /([^0-9\[\]【】\n]{2,30})(\d+[万千億]?\s*回視聴)/,
+      // パターン3: 「】」の後のテキスト
+      /】([^0-9\[\]【】\n]{2,30})(\d+[万千億]?\s*回視聴)/
+    ];
     
-    // パターン: "タイトル + チャンネル名 + 再生回数 + 投稿日時"
-    // 例: "【タイトル】チャンネル名152万 回視聴 • 1 か月前"
-    
-    // 再生回数の直前のテキストをチャンネル名として抽出
-    const viewPattern = /(.+?)(\d+(?:[,.]\d+)*(?:[万千億])?)\s*(?:回)?(?:視聴|views)/i;
-    const match = fullText.match(viewPattern);
-    
-    if (match) {
-      let channelCandidate = match[1];
+    for (const pattern of patterns) {
+      const match = metadataText.match(pattern);
+      console.log('[DEBUG] Trying pattern:', pattern, 'Result:', match);
       
-      // タイトル部分を除去（一般的なパターンで）
-      // 【】で囲まれた部分や長いタイトルを除去
-      channelCandidate = channelCandidate.replace(/^.+?】/, '');
-      channelCandidate = channelCandidate.replace(/^.{50,}/, ''); // 50文字以上の長いテキストを除去
-      channelCandidate = channelCandidate.trim();
-      
-      // チャンネル名らしい長さ（1-30文字）かチェック
-      if (channelCandidate.length > 0 && channelCandidate.length <= 30) {
-        // チャンネル名として仮のIDを作成（@マークを付加）
-        const channelId = '@' + channelCandidate.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '');
-        return {
-          id: channelId,
-          name: channelCandidate
-        };
+      if (match && match[1]) {
+        let channelCandidate = match[1].trim();
+        
+        // 不要な文字を除去
+        channelCandidate = channelCandidate.replace(/^[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/, '');
+        channelCandidate = channelCandidate.replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/, '');
+        
+        console.log('[DEBUG] Cleaned channel candidate:', channelCandidate);
+        
+        if (channelCandidate.length >= 2 && channelCandidate.length <= 50) {
+          const channelId = '@' + channelCandidate.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '');
+          console.log('[DEBUG] Extracted channel:', { id: channelId, name: channelCandidate });
+          return {
+            id: channelId,
+            name: channelCandidate
+          };
+        }
       }
     }
   }
   
+  console.log('[DEBUG] No channel extracted from lockup');
   return null;
 }
 
 // ブロックされた動画を非表示にする
 function hideBlockedVideos() {
+  console.log('[DEBUG] hideBlockedVideos called');
+  
   // 従来の動画コンテナ
   const traditionalVideoSelectors = [
     'ytd-video-renderer',
@@ -182,6 +208,7 @@ function hideBlockedVideos() {
   // 従来の動画要素を処理
   traditionalVideoSelectors.forEach(selector => {
     const videos = document.querySelectorAll(selector);
+    console.log(`[DEBUG] Found ${videos.length} ${selector} elements`);
     
     videos.forEach(video => {
       if (video.hasAttribute('data-channel-blocker-processed')) {
@@ -220,14 +247,19 @@ function hideBlockedVideos() {
   
   // 新しいyt-lockup-view-model要素を処理（関連動画用）
   const lockupElements = document.querySelectorAll('yt-lockup-view-model');
+  console.log(`[DEBUG] Found ${lockupElements.length} yt-lockup-view-model elements`);
   
-  lockupElements.forEach(lockup => {
+  lockupElements.forEach((lockup, index) => {
+    console.log(`[DEBUG] Processing lockup ${index}`);
+    
     if (lockup.hasAttribute('data-channel-blocker-processed')) {
+      console.log(`[DEBUG] Lockup ${index} already processed`);
       return;
     }
     
     // チャンネル情報を抽出
     const channelInfo = extractChannelFromLockup(lockup);
+    console.log(`[DEBUG] Lockup ${index} channel info:`, channelInfo);
     
     if (channelInfo) {
       const { id: channelId, name: channelName } = channelInfo;
@@ -238,8 +270,11 @@ function hideBlockedVideos() {
         console.log(`Blocked related video from channel: ${channelName} (${channelId})`);
       } else {
         // ブロックボタンを追加
+        console.log(`[DEBUG] Adding block button to lockup ${index}`);
         addBlockButtonToLockup(lockup, channelId, channelName);
       }
+    } else {
+      console.log(`[DEBUG] No channel info extracted for lockup ${index}`);
     }
     
     lockup.setAttribute('data-channel-blocker-processed', 'true');
@@ -279,8 +314,11 @@ function addBlockButton(videoElement, channelId, channelName) {
 
 // yt-lockup-view-model要素にブロックボタンを追加
 function addBlockButtonToLockup(lockupElement, channelId, channelName) {
+  console.log('[DEBUG] addBlockButtonToLockup called with:', channelId, channelName);
+  
   // 既にブロックボタンが存在するかチェック
   if (lockupElement.querySelector('.channel-block-btn-lockup')) {
+    console.log('[DEBUG] Block button already exists');
     return;
   }
   
@@ -290,9 +328,12 @@ function addBlockButtonToLockup(lockupElement, channelId, channelName) {
   blockBtn.textContent = getContentText('blockButton');
   blockBtn.title = getContentText('blockButtonTitle', { name: channelName });
   
+  console.log('[DEBUG] Created block button:', blockBtn);
+  
   blockBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('[DEBUG] Block button clicked for:', channelName);
     
     // 確認ダイアログを削除し、直接ブロック実行
     addToBlockedChannels(channelId, channelName);
@@ -301,6 +342,7 @@ function addBlockButtonToLockup(lockupElement, channelId, channelName) {
   // lockup要素の適切な場所に配置
   const contentDiv = lockupElement.querySelector('.yt-lockup-view-model-wiz');
   if (contentDiv) {
+    console.log('[DEBUG] Found content div, adding button');
     // 相対位置でボタンを配置
     contentDiv.style.position = 'relative';
     blockBtn.style.position = 'absolute';
@@ -309,9 +351,13 @@ function addBlockButtonToLockup(lockupElement, channelId, channelName) {
     blockBtn.style.zIndex = '1000';
     contentDiv.appendChild(blockBtn);
   } else {
+    console.log('[DEBUG] Content div not found, using fallback');
     // フォールバック: lockup要素の最後に追加
+    lockupElement.style.position = 'relative';
     lockupElement.appendChild(blockBtn);
   }
+  
+  console.log('[DEBUG] Block button added successfully');
 }
 
 // メッセージを表示
