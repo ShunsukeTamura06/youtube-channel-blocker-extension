@@ -3,6 +3,43 @@ console.log('YouTube Channel Blocker: Content script loaded');
 // ブロック済みチャンネルのリストを管理
 let blockedChannels = new Set();
 let channelNames = {}; // チャンネル名のマッピング
+let currentLanguage = 'ja'; // デフォルト言語
+
+// 言語設定を読み込み（簡略版）
+async function loadLanguageFromStorage() {
+  try {
+    const result = await chrome.storage.sync.get(['language']);
+    currentLanguage = result.language || 'ja';
+  } catch (error) {
+    console.error('Error loading language setting:', error);
+  }
+}
+
+// 多言語辞書（コンテンツスクリプト用）
+const CONTENT_TEXTS = {
+  ja: {
+    blockButton: '🚫 ブロック',
+    blockButtonTitle: 'チャンネル "{name}" をブロック',
+    channelBlocked: 'チャンネル "{name}" をブロックしました'
+  },
+  en: {
+    blockButton: '🚫 Block',
+    blockButtonTitle: 'Block channel "{name}"',
+    channelBlocked: 'Channel "{name}" blocked'
+  }
+};
+
+// テキストを取得（コンテンツスクリプト用）
+function getContentText(key, replacements = {}) {
+  let text = CONTENT_TEXTS[currentLanguage]?.[key] || CONTENT_TEXTS['ja'][key] || key;
+  
+  // プレースホルダーを置換
+  Object.keys(replacements).forEach(placeholder => {
+    text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+  });
+  
+  return text;
+}
 
 // ストレージからブロックリストを読み込み
 async function loadBlockedChannels() {
@@ -33,7 +70,7 @@ async function addToBlockedChannels(channelId, channelName) {
     console.log(`Channel blocked: ${channelName} (${channelId})`);
     
     // メッセージを表示
-    showMessage(`チャンネル "${channelName}" をブロックしました`);
+    showMessage(getContentText('channelBlocked', { name: channelName }));
     
     // ページ上の動画を再チェック
     hideBlockedVideos();
@@ -151,8 +188,8 @@ function addBlockButton(videoElement, channelId, channelName) {
   // ブロックボタンを作成
   const blockBtn = document.createElement('button');
   blockBtn.className = 'channel-block-btn';
-  blockBtn.textContent = '🚫 ブロック';
-  blockBtn.title = `チャンネル "${channelName}" をブロック`;
+  blockBtn.textContent = getContentText('blockButton');
+  blockBtn.title = getContentText('blockButtonTitle', { name: channelName });
   
   blockBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -261,11 +298,29 @@ function watchUrlChanges() {
   urlObserver.observe(document, { subtree: true, childList: true });
 }
 
+// 既存のブロックボタンのテキストを更新
+function updateExistingBlockButtons() {
+  const existingButtons = document.querySelectorAll('.channel-block-btn');
+  existingButtons.forEach(button => {
+    button.textContent = getContentText('blockButton');
+    
+    // titleも更新（チャンネル名が必要だが、再取得は複雑なので基本テキストのみ更新）
+    const channelName = button.title.match(/チャンネル "(.+)" をブロック|Block channel "(.+)"/);
+    if (channelName) {
+      const name = channelName[1] || channelName[2];
+      button.title = getContentText('blockButtonTitle', { name: name });
+    }
+  });
+}
+
 // 初期化
 (async function init() {
   console.log('Initializing YouTube Channel Blocker...');
   
   try {
+    // 言語設定を読み込み
+    await loadLanguageFromStorage();
+    
     // ブロックリストを読み込み
     await loadBlockedChannels();
     
@@ -295,13 +350,21 @@ function watchUrlChanges() {
 
 // ストレージの変更を監視
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'sync' && changes.blockedChannels) {
-    blockedChannels = new Set(changes.blockedChannels.newValue || []);
-    console.log('Blocked channels updated:', Array.from(blockedChannels));
-    hideBlockedVideos();
-  }
-  if (namespace === 'sync' && changes.channelNames) {
-    channelNames = changes.channelNames.newValue || {};
-    console.log('Channel names updated:', channelNames);
+  if (namespace === 'sync') {
+    if (changes.blockedChannels) {
+      blockedChannels = new Set(changes.blockedChannels.newValue || []);
+      console.log('Blocked channels updated:', Array.from(blockedChannels));
+      hideBlockedVideos();
+    }
+    if (changes.channelNames) {
+      channelNames = changes.channelNames.newValue || {};
+      console.log('Channel names updated:', channelNames);
+    }
+    if (changes.language) {
+      currentLanguage = changes.language.newValue || 'ja';
+      console.log('Language updated:', currentLanguage);
+      // 既存のボタンテキストを更新
+      updateExistingBlockButtons();
+    }
   }
 });
