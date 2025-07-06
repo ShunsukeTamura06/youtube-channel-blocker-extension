@@ -21,6 +21,33 @@
   background: #aa2222 !important;
 }
 
+/* 関連動画（yt-lockup-view-model）用ブロックボタンのスタイル */
+.channel-block-btn-lockup {
+  background: #ff4444 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 3px !important;
+  padding: 3px 6px !important;
+  font-size: 10px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  z-index: 1001 !important;
+  position: absolute !important;
+  top: 5px !important;
+  right: 5px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.channel-block-btn-lockup:hover {
+  background: #cc3333 !important;
+  transform: scale(1.05) !important;
+}
+
+.channel-block-btn-lockup:active {
+  background: #aa2222 !important;
+  transform: scale(0.95) !important;
+}
+
 /* メッセージのスタイル */
 .channel-blocker-message {
   position: fixed !important;
@@ -50,4 +77,9 @@
 /* ブロックされた動画は完全に非表示 */
 [data-channel-blocker-processed][style*="display: none"] {
   display: none !important;
+}
+
+/* 関連動画コンテナの位置調整 */
+.yt-lockup-view-model-wiz {
+  position: relative !important;
 }
