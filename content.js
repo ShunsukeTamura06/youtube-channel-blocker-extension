@@ -315,7 +315,7 @@ function hideBlockedVideos() {
 function extractChannelFromLockup(lockupElement) {
   console.log('[DEBUG] Processing lockup element:', lockupElement);
   
-  // より広範囲でテキスト要素を探す
+  // より幅範囲でテキスト要素を探す
   const allTextElements = lockupElement.querySelectorAll('*');
   let metadataText = '';
   
@@ -406,7 +406,7 @@ function addBlockButton(videoElement, channelId, channelName) {
   }
 }
 
-// ytd-compact-video-renderer要素にブロックボタンを追加
+// ytd-compact-video-renderer要素にブロックボタンを追加（位置改善版）
 function addBlockButtonToCompactVideo(compactVideoElement, channelId, channelName) {
   console.log('[DEBUG] addBlockButtonToCompactVideo called with:', channelId, channelName);
   
@@ -433,27 +433,32 @@ function addBlockButtonToCompactVideo(compactVideoElement, channelId, channelNam
     addToBlockedChannels(channelId, channelName);
   });
   
-  // compact video要素の適切な場所に配置
-  const metadataContainer = compactVideoElement.querySelector('#metadata, ytd-video-meta-block, .ytd-video-meta-block');
-  if (metadataContainer) {
-    console.log('[DEBUG] Found metadata container, adding button');
-    metadataContainer.style.position = 'relative';
-    blockBtn.style.position = 'absolute';
-    blockBtn.style.top = '5px';
-    blockBtn.style.right = '5px';
-    blockBtn.style.zIndex = '1000';
-    metadataContainer.appendChild(blockBtn);
+  // サムネイル要素を探してそこに配置（「ライブ」「新着」と同じ位置）
+  const thumbnailElement = compactVideoElement.querySelector('ytd-thumbnail, .ytd-thumbnail');
+  if (thumbnailElement) {
+    console.log('[DEBUG] Found thumbnail element, adding button');
+    // サムネイルを相対位置に設定
+    thumbnailElement.style.position = 'relative';
+    thumbnailElement.appendChild(blockBtn);
   } else {
-    console.log('[DEBUG] Metadata container not found, using fallback');
-    // フォールバック: compact video要素の最後に追加
-    compactVideoElement.style.position = 'relative';
-    compactVideoElement.appendChild(blockBtn);
+    // フォールバック: メタデータコンテナに配置
+    const metadataContainer = compactVideoElement.querySelector('#metadata, ytd-video-meta-block, .ytd-video-meta-block');
+    if (metadataContainer) {
+      console.log('[DEBUG] Found metadata container, adding button');
+      metadataContainer.style.position = 'relative';
+      metadataContainer.appendChild(blockBtn);
+    } else {
+      console.log('[DEBUG] No suitable container found, using fallback');
+      // 最終フォールバック: compact video要素の最後に追加
+      compactVideoElement.style.position = 'relative';
+      compactVideoElement.appendChild(blockBtn);
+    }
   }
   
   console.log('[DEBUG] Block button added successfully');
 }
 
-// yt-lockup-view-model要素にブロックボタンを追加（後方互換性）
+// yt-lockup-view-model要素にブロックボタンを追加（後方互換性・位置改善版）
 function addBlockButtonToLockup(lockupElement, channelId, channelName) {
   console.log('[DEBUG] addBlockButtonToLockup called with:', channelId, channelName);
   
@@ -480,19 +485,14 @@ function addBlockButtonToLockup(lockupElement, channelId, channelName) {
     addToBlockedChannels(channelId, channelName);
   });
   
-  // lockup要素の適切な場所に配置
-  const contentDiv = lockupElement.querySelector('.yt-lockup-view-model-wiz');
-  if (contentDiv) {
-    console.log('[DEBUG] Found content div, adding button');
-    // 相対位置でボタンを配置
-    contentDiv.style.position = 'relative';
-    blockBtn.style.position = 'absolute';
-    blockBtn.style.top = '5px';
-    blockBtn.style.right = '5px';
-    blockBtn.style.zIndex = '1000';
-    contentDiv.appendChild(blockBtn);
+  // サムネイル要素を探してそこに配置
+  const thumbnailElement = lockupElement.querySelector('.yt-lockup-view-model-wiz, [class*="thumbnail"]');
+  if (thumbnailElement) {
+    console.log('[DEBUG] Found thumbnail-like element, adding button');
+    thumbnailElement.style.position = 'relative';
+    thumbnailElement.appendChild(blockBtn);
   } else {
-    console.log('[DEBUG] Content div not found, using fallback');
+    console.log('[DEBUG] No thumbnail element found, using fallback');
     // フォールバック: lockup要素の最後に追加
     lockupElement.style.position = 'relative';
     lockupElement.appendChild(blockBtn);
