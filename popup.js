@@ -10,13 +10,33 @@ const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
 const importInput = document.getElementById('importInput');
 const status = document.getElementById('status');
+const languageSelect = document.getElementById('languageSelect');
 
 // ブロック済みチャンネルのデータ
 let blockedChannels = [];
 let channelNames = {}; // チャンネルIDと名前のマッピング
 
+// 多言語化関数
+function updateTexts() {
+  // data-i18n 属性を持つ要素を更新
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    const key = element.getAttribute('data-i18n');
+    element.textContent = getText(key);
+  });
+  
+  // placeholder を更新
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+    const key = element.getAttribute('data-i18n-placeholder');
+    element.placeholder = getText(key);
+  });
+  
+  // チャンネル数表示を更新
+  updateChannelCountText();
+}
+
 // ステータスメッセージを表示
-function showStatus(message, type = 'info') {
+function showStatus(messageKey, type = 'info', replacements = {}) {
+  const message = getText(messageKey, replacements);
   status.textContent = message;
   status.className = `status ${type}`;
   
@@ -79,7 +99,7 @@ async function loadData() {
     updateUI();
   } catch (error) {
     console.error('Error loading data:', error);
-    showStatus('データの読み込みに失敗しました', 'error');
+    showStatus('dataLoadError', 'error');
   }
 }
 
@@ -93,7 +113,7 @@ async function saveData() {
     console.log('Data saved successfully');
   } catch (error) {
     console.error('Error saving data:', error);
-    showStatus('データの保存に失敗しました', 'error');
+    showStatus('dataSaveError', 'error');
   }
 }
 
@@ -102,12 +122,12 @@ async function addChannel(channelId, channelName = '') {
   const normalizedId = normalizeChannelId(channelId);
   
   if (!normalizedId) {
-    showStatus('有効なチャンネルIDまたはURLを入力してください', 'error');
+    showStatus('invalidChannelId', 'error');
     return;
   }
   
   if (blockedChannels.includes(normalizedId)) {
-    showStatus('このチャンネルは既にブロック済みです', 'error');
+    showStatus('channelAlreadyBlocked', 'error');
     return;
   }
   
@@ -124,7 +144,7 @@ async function addChannel(channelId, channelName = '') {
   await saveData();
   updateUI();
   
-  showStatus(`チャンネル "${channelNames[normalizedId]}" を追加しました`, 'success');
+  showStatus('channelAdded', 'success', { name: channelNames[normalizedId] });
   
   // 入力フィールドをクリア
   channelInput.value = '';
@@ -141,25 +161,26 @@ async function removeChannel(channelId) {
     await saveData();
     updateUI();
     
-    showStatus(`チャンネル "${channelName}" を削除しました`, 'success');
+    showStatus('channelRemoved', 'success', { name: channelName });
   }
 }
 
 // すべてクリア
 async function clearAll() {
   if (blockedChannels.length === 0) {
-    showStatus('ブロック中のチャンネルはありません', 'error');
+    showStatus('noChannelsToRemove', 'error');
     return;
   }
   
-  if (confirm(`${blockedChannels.length}個のブロック中チャンネルをすべて削除しますか？`)) {
+  const confirmMessage = getText('confirmClearAll', { count: blockedChannels.length });
+  if (confirm(confirmMessage)) {
     blockedChannels = [];
     channelNames = {};
     
     await saveData();
     updateUI();
     
-    showStatus('すべてのチャンネルを削除しました', 'success');
+    showStatus('allChannelsRemoved', 'success');
   }
 }
 
@@ -180,7 +201,7 @@ function exportData() {
   a.click();
   
   URL.revokeObjectURL(url);
-  showStatus('データをエクスポートしました', 'success');
+  showStatus('dataExported', 'success');
 }
 
 // データをインポート
@@ -192,10 +213,10 @@ function importData(file) {
       const data = JSON.parse(e.target.result);
       
       if (!data.blockedChannels || !Array.isArray(data.blockedChannels)) {
-        throw new Error('無効なデータ形式です');
+        throw new Error(getText('invalidDataFormat'));
       }
       
-      const confirmMessage = `${data.blockedChannels.length}個のチャンネルをインポートしますか？\n\n現在のデータは上書きされます。`;
+      const confirmMessage = getText('confirmImport', { count: data.blockedChannels.length });
       
       if (confirm(confirmMessage)) {
         blockedChannels = data.blockedChannels;
@@ -204,11 +225,11 @@ function importData(file) {
         await saveData();
         updateUI();
         
-        showStatus(`${blockedChannels.length}個のチャンネルをインポートしました`, 'success');
+        showStatus('dataImported', 'success', { count: blockedChannels.length });
       }
     } catch (error) {
       console.error('Import error:', error);
-      showStatus('インポートに失敗しました: ' + error.message, 'error');
+      showStatus('importError', 'error');
     }
   };
   
@@ -238,7 +259,7 @@ function createSafeHTML(channelId, channelName) {
   
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove-btn';
-  removeBtn.textContent = '削除';
+  removeBtn.textContent = getText('removeButton');
   removeBtn.addEventListener('click', () => {
     removeChannel(channelId);
   });
@@ -251,17 +272,26 @@ function createSafeHTML(channelId, channelName) {
   return container;
 }
 
+// チャンネル数表示を更新
+function updateChannelCountText() {
+  const countElement = document.getElementById('channelCount');
+  if (countElement) {
+    const channelsText = getText('channelsCount');
+    countElement.innerHTML = `${blockedChannels.length} <span>${channelsText}</span>`;
+  }
+}
+
 // UIを更新
 function updateUI() {
   // チャンネル数を更新
-  channelCount.textContent = `${blockedChannels.length} チャンネル`;
+  updateChannelCountText();
   
   // チャンネルリストを更新
   if (blockedChannels.length === 0) {
     channelList.innerHTML = `
       <div class="empty-state">
-        <p>📝 ブロック中のチャンネルはありません</p>
-        <p class="hint">YouTube で動画の「🚫 ブロック」ボタンをクリックして追加してください</p>
+        <p>${getText('emptyStateMessage')}</p>
+        <p class="hint">${getText('emptyStateHint')}</p>
       </div>
     `;
   } else {
@@ -275,6 +305,36 @@ function updateUI() {
       channelList.appendChild(channelItem);
     });
   }
+}
+
+// 言語変更時の処理
+function onLanguageChange() {
+  updateTexts();
+  updateUI();
+  
+  // 言語設定を保存
+  saveLanguage(languageSelect.value);
+}
+
+// 初期化
+async function initialize() {
+  // 言語設定を初期化
+  await initializeLanguage();
+  
+  // 言語選択を設定
+  languageSelect.value = currentLanguage;
+  
+  // テキストを更新
+  updateTexts();
+  
+  // データを読み込み
+  await loadData();
+  
+  // 言語変更リスナーを追加
+  addLanguageChangeListener(() => {
+    updateTexts();
+    updateUI();
+  });
 }
 
 // イベントリスナーの設定
@@ -311,5 +371,7 @@ importInput.addEventListener('change', (e) => {
   }
 });
 
-// 初期化
-loadData();
+languageSelect.addEventListener('change', onLanguageChange);
+
+// 初期化実行
+initialize();
