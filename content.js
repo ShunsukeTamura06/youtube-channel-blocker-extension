@@ -19,12 +19,12 @@ async function loadLanguageFromStorage() {
 // 多言語辞書（コンテンツスクリプト用）
 const CONTENT_TEXTS = {
   ja: {
-    blockButton: '🚫 ブロック',
+    blockButton: '❌',
     blockButtonTitle: 'チャンネル "{name}" をブロック',
     channelBlocked: 'チャンネル "{name}" をブロックしました'
   },
   en: {
-    blockButton: '🚫 Block',
+    blockButton: '❌',
     blockButtonTitle: 'Block channel "{name}"',
     channelBlocked: 'Channel "{name}" blocked'
   }
