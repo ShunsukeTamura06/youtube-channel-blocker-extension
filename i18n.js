@@ -11,7 +11,7 @@ const LANGUAGES = {
     blockedChannels: 'ブロック中のチャンネル',
     channelsCount: 'チャンネル',
     emptyStateMessage: '📝 ブロック中のチャンネルはありません',
-    emptyStateHint: 'YouTube で動画の「❌」ボタンをクリックして追加してください',
+    emptyStateHint: 'YouTube で動画の「Block」ボタンをクリックして追加してください',
     clearAllButton: 'すべてクリア',
     exportButton: 'エクスポート',
     importButton: 'インポート',
@@ -37,7 +37,7 @@ const LANGUAGES = {
     confirmImport: '{count}個のチャンネルをインポートしますか？\\n\\n現在のデータは上書きされます。',
     
     // コンテンツスクリプト
-    blockButton: '❌',
+    blockButton: 'Block',
     blockButtonTitle: 'チャンネル "{name}" をブロック',
     channelBlocked: 'チャンネル "{name}" をブロックしました'
   },
@@ -53,7 +53,7 @@ const LANGUAGES = {
     blockedChannels: 'Blocked Channels',
     channelsCount: 'channels',
     emptyStateMessage: '📝 No blocked channels',
-    emptyStateHint: 'Click the "❌" button on YouTube videos to add channels',
+    emptyStateHint: 'Click the "Block" button on YouTube videos to add channels',
     clearAllButton: 'Clear All',
     exportButton: 'Export',
     importButton: 'Import',
@@ -79,7 +79,7 @@ const LANGUAGES = {
     confirmImport: 'Import {count} channels?\\n\\nCurrent data will be overwritten.',
     
     // Content script
-    blockButton: '❌',
+    blockButton: 'Block',
     blockButtonTitle: 'Block channel "{name}"',
     channelBlocked: 'Channel "{name}" blocked'
   }
