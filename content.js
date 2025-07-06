@@ -129,17 +129,58 @@ function getChannelName(linkElement) {
   return name;
 }
 
+// yt-lockup-view-model からチャンネル名を抽出
+function extractChannelFromLockup(lockupElement) {
+  // メタデータ要素からチャンネル名を抽出
+  const metadataElements = lockupElement.querySelectorAll('yt-lockup-metadata-view-model, [class*="metadata"]');
+  
+  for (const metadata of metadataElements) {
+    const fullText = metadata.textContent?.trim();
+    if (!fullText) continue;
+    
+    // パターン: "タイトル + チャンネル名 + 再生回数 + 投稿日時"
+    // 例: "【タイトル】チャンネル名152万 回視聴 • 1 か月前"
+    
+    // 再生回数の直前のテキストをチャンネル名として抽出
+    const viewPattern = /(.+?)(\d+(?:[,.]\d+)*(?:[万千億])?)\s*(?:回)?(?:視聴|views)/i;
+    const match = fullText.match(viewPattern);
+    
+    if (match) {
+      let channelCandidate = match[1];
+      
+      // タイトル部分を除去（一般的なパターンで）
+      // 【】で囲まれた部分や長いタイトルを除去
+      channelCandidate = channelCandidate.replace(/^.+?】/, '');
+      channelCandidate = channelCandidate.replace(/^.{50,}/, ''); // 50文字以上の長いテキストを除去
+      channelCandidate = channelCandidate.trim();
+      
+      // チャンネル名らしい長さ（1-30文字）かチェック
+      if (channelCandidate.length > 0 && channelCandidate.length <= 30) {
+        // チャンネル名として仮のIDを作成（@マークを付加）
+        const channelId = '@' + channelCandidate.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '');
+        return {
+          id: channelId,
+          name: channelCandidate
+        };
+      }
+    }
+  }
+  
+  return null;
+}
+
 // ブロックされた動画を非表示にする
 function hideBlockedVideos() {
-  // 様々な動画コンテナを対象に
-  const videoSelectors = [
+  // 従来の動画コンテナ
+  const traditionalVideoSelectors = [
     'ytd-video-renderer',
     'ytd-rich-item-renderer', 
     'ytd-compact-video-renderer',
     'ytd-grid-video-renderer'
   ];
   
-  videoSelectors.forEach(selector => {
+  // 従来の動画要素を処理
+  traditionalVideoSelectors.forEach(selector => {
     const videos = document.querySelectorAll(selector);
     
     videos.forEach(video => {
@@ -167,7 +208,7 @@ function hideBlockedVideos() {
       if (channelId && blockedChannels.has(channelId)) {
         // 動画を非表示にする
         video.style.display = 'none';
-        console.log(`Blocked video from channel: ${channelName} (${channelId})`);
+        console.log(`Blocked traditional video from channel: ${channelName} (${channelId})`);
       } else if (channelId) {
         // ブロックボタンを追加
         addBlockButton(video, channelId, channelName);
@@ -176,9 +217,36 @@ function hideBlockedVideos() {
       video.setAttribute('data-channel-blocker-processed', 'true');
     });
   });
+  
+  // 新しいyt-lockup-view-model要素を処理（関連動画用）
+  const lockupElements = document.querySelectorAll('yt-lockup-view-model');
+  
+  lockupElements.forEach(lockup => {
+    if (lockup.hasAttribute('data-channel-blocker-processed')) {
+      return;
+    }
+    
+    // チャンネル情報を抽出
+    const channelInfo = extractChannelFromLockup(lockup);
+    
+    if (channelInfo) {
+      const { id: channelId, name: channelName } = channelInfo;
+      
+      if (blockedChannels.has(channelId)) {
+        // 関連動画を非表示にする
+        lockup.style.display = 'none';
+        console.log(`Blocked related video from channel: ${channelName} (${channelId})`);
+      } else {
+        // ブロックボタンを追加
+        addBlockButtonToLockup(lockup, channelId, channelName);
+      }
+    }
+    
+    lockup.setAttribute('data-channel-blocker-processed', 'true');
+  });
 }
 
-// ブロックボタンを追加
+// 従来の動画要素にブロックボタンを追加
 function addBlockButton(videoElement, channelId, channelName) {
   // 既にブロックボタンが存在するかチェック
   if (videoElement.querySelector('.channel-block-btn')) {
@@ -206,6 +274,43 @@ function addBlockButton(videoElement, channelId, channelName) {
   } else {
     // フォールバック: 動画要素の最後に追加
     videoElement.appendChild(blockBtn);
+  }
+}
+
+// yt-lockup-view-model要素にブロックボタンを追加
+function addBlockButtonToLockup(lockupElement, channelId, channelName) {
+  // 既にブロックボタンが存在するかチェック
+  if (lockupElement.querySelector('.channel-block-btn-lockup')) {
+    return;
+  }
+  
+  // ブロックボタンを作成
+  const blockBtn = document.createElement('button');
+  blockBtn.className = 'channel-block-btn-lockup';
+  blockBtn.textContent = getContentText('blockButton');
+  blockBtn.title = getContentText('blockButtonTitle', { name: channelName });
+  
+  blockBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 確認ダイアログを削除し、直接ブロック実行
+    addToBlockedChannels(channelId, channelName);
+  });
+  
+  // lockup要素の適切な場所に配置
+  const contentDiv = lockupElement.querySelector('.yt-lockup-view-model-wiz');
+  if (contentDiv) {
+    // 相対位置でボタンを配置
+    contentDiv.style.position = 'relative';
+    blockBtn.style.position = 'absolute';
+    blockBtn.style.top = '5px';
+    blockBtn.style.right = '5px';
+    blockBtn.style.zIndex = '1000';
+    contentDiv.appendChild(blockBtn);
+  } else {
+    // フォールバック: lockup要素の最後に追加
+    lockupElement.appendChild(blockBtn);
   }
 }
 
@@ -300,7 +405,7 @@ function watchUrlChanges() {
 
 // 既存のブロックボタンのテキストを更新
 function updateExistingBlockButtons() {
-  const existingButtons = document.querySelectorAll('.channel-block-btn');
+  const existingButtons = document.querySelectorAll('.channel-block-btn, .channel-block-btn-lockup');
   existingButtons.forEach(button => {
     button.textContent = getContentText('blockButton');
     
