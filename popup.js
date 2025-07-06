@@ -215,6 +215,42 @@ function importData(file) {
   reader.readAsText(file);
 }
 
+// 安全にテキストをHTML要素に設定する関数
+function safeSetText(element, text) {
+  element.textContent = text;
+}
+
+// 安全にHTMLを作成する関数
+function createSafeHTML(channelId, channelName) {
+  const container = document.createElement('div');
+  container.className = 'channel-item';
+  
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'channel-info';
+  
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'channel-name';
+  safeSetText(nameDiv, channelName);
+  
+  const idDiv = document.createElement('div');
+  idDiv.className = 'channel-id';
+  safeSetText(idDiv, channelId);
+  
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove-btn';
+  removeBtn.textContent = '削除';
+  removeBtn.addEventListener('click', () => {
+    removeChannel(channelId);
+  });
+  
+  infoDiv.appendChild(nameDiv);
+  infoDiv.appendChild(idDiv);
+  container.appendChild(infoDiv);
+  container.appendChild(removeBtn);
+  
+  return container;
+}
+
 // UIを更新
 function updateUI() {
   // チャンネル数を更新
@@ -229,39 +265,16 @@ function updateUI() {
       </div>
     `;
   } else {
-    const channelItems = blockedChannels.map(channelId => {
+    // 既存の内容をクリア
+    channelList.innerHTML = '';
+    
+    // 各チャンネルアイテムを安全に作成
+    blockedChannels.forEach(channelId => {
       const channelName = channelNames[channelId] || channelId;
-      
-      return `
-        <div class="channel-item">
-          <div class="channel-info">
-            <div class="channel-name">${escapeHtml(channelName)}</div>
-            <div class="channel-id">${escapeHtml(channelId)}</div>
-          </div>
-          <button class="remove-btn" data-channel-id="${escapeHtml(channelId)}">
-            削除
-          </button>
-        </div>
-      `;
-    }).join('');
-    
-    channelList.innerHTML = channelItems;
-    
-    // 削除ボタンのイベントリスナーを追加
-    channelList.querySelectorAll('.remove-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const channelId = btn.getAttribute('data-channel-id');
-        removeChannel(channelId);
-      });
+      const channelItem = createSafeHTML(channelId, channelName);
+      channelList.appendChild(channelItem);
     });
   }
-}
-
-// HTMLエスケープ
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 // イベントリスナーの設定
