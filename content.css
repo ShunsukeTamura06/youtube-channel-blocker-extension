@@ -1,4 +1,4 @@
-/* ブロックボタンのスタイル */
+/* ブロックボタンのスタイル（従来の動画用） */
 .channel-block-btn {
   background: #ff4444 !important;
   color: white !important;
@@ -21,7 +21,37 @@
   background: #aa2222 !important;
 }
 
-/* 関連動画（yt-lockup-view-model）用ブロックボタンのスタイル */
+/* 関連動画（ytd-compact-video-renderer）用ブロックボタンのスタイル */
+.channel-block-btn-compact {
+  background: #ff4444 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 3px !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  z-index: 1001 !important;
+  position: absolute !important;
+  top: 5px !important;
+  right: 5px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  line-height: 1 !important;
+  min-width: auto !important;
+  white-space: nowrap !important;
+}
+
+.channel-block-btn-compact:hover {
+  background: #cc3333 !important;
+  transform: scale(1.05) !important;
+}
+
+.channel-block-btn-compact:active {
+  background: #aa2222 !important;
+  transform: scale(0.95) !important;
+}
+
+/* 旧式のyt-lockup-view-model用ブロックボタンのスタイル（後方互換性） */
 .channel-block-btn-lockup {
   background: #ff4444 !important;
   color: white !important;
@@ -81,5 +111,17 @@
 
 /* 関連動画コンテナの位置調整 */
 .yt-lockup-view-model-wiz {
+  position: relative !important;
+}
+
+/* ytd-compact-video-renderer の位置調整 */
+ytd-compact-video-renderer {
+  position: relative !important;
+}
+
+/* メタデータエリアの位置調整 */
+ytd-compact-video-renderer #metadata,
+ytd-compact-video-renderer ytd-video-meta-block,
+ytd-compact-video-renderer .ytd-video-meta-block {
   position: relative !important;
 }
