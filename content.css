@@ -4,8 +4,8 @@
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 12px !important;
-  padding: 2px 8px !important;
-  font-size: 9px !important;
+  padding: 3px 10px !important;
+  font-size: 10px !important;
   cursor: pointer !important;
   margin: 2px !important;
   transition: all 0.2s ease !important;
@@ -13,8 +13,8 @@
   position: relative !important;
   backdrop-filter: blur(4px) !important;
   line-height: 1.2 !important;
-  min-width: 35px !important;
-  max-width: 50px !important;
+  min-width: 40px !important;
+  max-width: 55px !important;
   white-space: nowrap !important;
   font-weight: 500 !important;
 }
@@ -36,8 +36,8 @@
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: 8px !important;
-  padding: 1px 6px !important;
-  font-size: 8px !important;
+  padding: 2px 7px !important;
+  font-size: 9px !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   z-index: 1001 !important;
@@ -46,8 +46,8 @@
   left: 4px !important;
   backdrop-filter: blur(3px) !important;
   line-height: 1.1 !important;
-  min-width: 30px !important;
-  max-width: 42px !important;
+  min-width: 35px !important;
+  max-width: 48px !important;
   white-space: nowrap !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
   font-weight: 500 !important;
@@ -71,8 +71,8 @@
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: 8px !important;
-  padding: 1px 6px !important;
-  font-size: 8px !important;
+  padding: 2px 7px !important;
+  font-size: 9px !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   z-index: 1001 !important;
@@ -81,8 +81,8 @@
   left: 4px !important;
   backdrop-filter: blur(3px) !important;
   line-height: 1.1 !important;
-  min-width: 30px !important;
-  max-width: 42px !important;
+  min-width: 35px !important;
+  max-width: 48px !important;
   white-space: nowrap !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
   font-weight: 500 !important;
